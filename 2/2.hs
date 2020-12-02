@@ -1,7 +1,6 @@
 import Control.Arrow
 import Data.List hiding (lookup)
 import Data.Map (Map, fromList, lookup)
-import Data.Ord
 import Prelude hiding (lookup)
 import Text.Regex
 
