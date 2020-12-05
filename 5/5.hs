@@ -6,7 +6,7 @@ data BTree a = Leaf a | Node (BTree a) (BTree a)
 mkTree n = mktree' [0..n]
         where mktree' [] = error "can't make empty tree"
               mktree' [x] = Leaf x
-              mktree' xs@(x:y:_) = Node (mktree' lhs) (mktree' rhs)
+              mktree' xs = Node (mktree' lhs) (mktree' rhs)
                 where (lhs, rhs) = splitAt ((length xs + 1) `div` 2) xs
 
 left :: BTree a -> BTree a
