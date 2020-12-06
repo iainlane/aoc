@@ -1,7 +1,7 @@
 import Data.List.Split (splitWhen)
-import Data.Set (Set, empty, fromList, intersection, isSubsetOf, unions)
+import Data.Set (Set, empty, fromList, intersection, unions)
 
-intersections xs = foldl intersection (unions xs) xs
+intersections = unions >>= foldl intersection
 
 one = sum . map (length . fromList . concat)
 two = sum . map (length . intersections . (map fromList))
