@@ -1,5 +1,5 @@
 import Data.List.Split (splitWhen)
-import Data.Set (Set, empty, fromList, intersection, unions)
+import Data.Set (fromList, intersection, unions)
 
 intersections = unions >>= foldl intersection
 
