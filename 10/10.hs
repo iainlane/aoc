@@ -28,7 +28,7 @@ nPaths m = Map.foldlWithKey (\accumMap key inputs -> (Map.insert key (f inputs a
                 f inputs accumMap = max 1 . sum $ map (fst . (!) accumMap) (Set.toList inputs)
 
 findAdapterChain :: Set Int -> [Int]
-findAdapterChain s = 0 : findAdapterChain' (Set.insert 0 s) 0
+findAdapterChain s = 0 : findAdapterChain' s 0
         where
                 findAdapterChain' as start | next == max = [max, max + 3]
                                            | otherwise = next : findAdapterChain' as next
