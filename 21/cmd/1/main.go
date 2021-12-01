@@ -4,13 +4,14 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
-	input, err := os.Open("input.txt")
+	input, err := os.Open(filepath.Join("data", "1", "input.txt"))
 	if err != nil {
 		log.Fatal(err)
 	}
