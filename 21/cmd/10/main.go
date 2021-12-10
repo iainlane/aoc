@@ -41,7 +41,7 @@ func parseLine(line string) ([]rune, rune) {
 			closerStack = append(closerStack, closer)
 			continue
 		}
-		// If we saw a closer, check it was the one we wanted
+		// If we saw any other char, check it was the one we wanted
 		expectedCloser := closerStack[len(closerStack)-1]
 		if c != expectedCloser {
 			log.Debugf("Expected %c, got %c", expectedCloser, c)
