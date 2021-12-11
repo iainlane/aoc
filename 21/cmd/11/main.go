@@ -150,9 +150,4 @@ func main() {
 
 	fmt.Println(ans1)
 	fmt.Println(ans2)
-
-	/*
-		fmt.Println(partOne(grid, lowPoints))
-		fmt.Println(partTwo(grid, lowPoints))
-	*/
 }
