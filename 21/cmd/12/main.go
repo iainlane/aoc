@@ -46,11 +46,11 @@ func (p path) String() string {
 	return s
 }
 
-type grid struct {
+type graph struct {
 	allVertices map[string]*vertex
 }
 
-func (g grid) String() string {
+func (g graph) String() string {
 	var s string
 	for _, v := range g.allVertices {
 		s += v.String() + "\n"
@@ -66,7 +66,7 @@ func makeVertex(value string) *vertex {
 	}
 }
 
-func (g grid) addEdge(from, to string) {
+func (g graph) addEdge(from, to string) {
 	fromV := g.allVertices[from]
 	if fromV == nil {
 		fromV = makeVertex(from)
@@ -102,9 +102,11 @@ func (v *vertex) canVisit(allowedVisits int, path path) bool {
 	return false
 }
 
-func findAllPaths(g *grid, start, end string, allowedVisits int) []path {
+func findAllPaths(g *graph, start, end string, allowedVisits int) []path {
 	var paths []path
 	var curQueue []path
+
+	s := g.allVertices[start]
 
 	curQueue = append(curQueue, path{
 		vertices: []*vertex{g.allVertices[start]},
@@ -116,7 +118,7 @@ func findAllPaths(g *grid, start, end string, allowedVisits int) []path {
 		log.Debugf("Considering path: %s, queue: %s", curPath, curQueue)
 
 		for _, v := range curPath.vertices[len(curPath.vertices)-1].connections {
-			if v.value == start {
+			if v == s {
 				log.Debugln("Not going back to the start")
 				continue
 			}
@@ -127,9 +129,8 @@ func findAllPaths(g *grid, start, end string, allowedVisits int) []path {
 
 			log.Debugf("path: %s, visiting: %s", curPath, v.value)
 
-			nvs := append(curPath.vertices[:], v)
 			newPath := path{
-				vertices:        make([]*vertex, len(nvs)),
+				vertices:        make([]*vertex, len(curPath.vertices)+1),
 				visited:         make(map[*vertex]bool, len(curPath.visited)),
 				maxSmallVisited: curPath.maxSmallVisited,
 			}
@@ -140,9 +141,7 @@ func findAllPaths(g *grid, start, end string, allowedVisits int) []path {
 				continue
 			}
 
-			for k, v := range nvs {
-				newPath.vertices[k] = v
-			}
+			copy(newPath.vertices, append(curPath.vertices, v))
 
 			for k, v := range curPath.visited {
 				newPath.visited[k] = v
@@ -151,8 +150,9 @@ func findAllPaths(g *grid, start, end string, allowedVisits int) []path {
 			if v.small {
 				if newPath.visited[v] {
 					newPath.maxSmallVisited++
+				} else {
+					newPath.visited[v] = true
 				}
-				newPath.visited[v] = true
 			}
 
 			log.Debugf("created new path: %s", newPath)
@@ -176,7 +176,7 @@ func main() {
 	reader := bufio.NewReader(input)
 	scanner := bufio.NewScanner(reader)
 
-	grid := &grid{
+	grid := &graph{
 		allVertices: make(map[string]*vertex),
 	}
 	for scanner.Scan() {
