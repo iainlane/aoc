@@ -134,6 +134,12 @@ func findAllPaths(g *grid, start, end string, allowedVisits int) []path {
 				maxSmallVisited: curPath.maxSmallVisited,
 			}
 
+			if v.value == end {
+				log.Debugln("found end")
+				paths = append(paths, newPath)
+				continue
+			}
+
 			for k, v := range nvs {
 				newPath.vertices[k] = v
 			}
@@ -142,11 +148,6 @@ func findAllPaths(g *grid, start, end string, allowedVisits int) []path {
 				newPath.visited[k] = v
 			}
 
-			if v.value == end {
-				log.Debugln("found end")
-				paths = append(paths, newPath)
-				continue
-			}
 
 			if v.small {
 				if newPath.visited[v.value] {
