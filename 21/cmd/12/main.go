@@ -30,8 +30,8 @@ func (v vertex) String() string {
 }
 
 type path struct {
-	vertices        []vertex
-	visited         map[string]bool
+	vertices        []*vertex
+	visited         map[*vertex]bool
 	maxSmallVisited int
 }
 
@@ -81,14 +81,14 @@ func (g grid) addEdge(from, to string) {
 	toV.connections = append(toV.connections, fromV)
 }
 
-func (v vertex) canVisit(allowedVisits int, path path) bool {
+func (v *vertex) canVisit(allowedVisits int, path path) bool {
 	log.Debugf("canVisit: %s, path: %s", v.value, path)
 	if !v.small {
 		log.Debugln("yes: not small")
 		return true
 	}
 
-	if !path.visited[v.value] {
+	if !path.visited[v] {
 		log.Debugln("yes: not visited")
 		return true
 	}
@@ -107,7 +107,7 @@ func findAllPaths(g *grid, start, end string, allowedVisits int) []path {
 	var curQueue []path
 
 	curQueue = append(curQueue, path{
-		vertices: []vertex{*g.allVertices[start]},
+		vertices: []*vertex{g.allVertices[start]},
 	})
 
 	for len(curQueue) > 0 {
@@ -127,10 +127,10 @@ func findAllPaths(g *grid, start, end string, allowedVisits int) []path {
 
 			log.Debugf("path: %s, visiting: %s", curPath, v.value)
 
-			nvs := append(curPath.vertices, *v)
+			nvs := append(curPath.vertices[:], v)
 			newPath := path{
-				vertices:        make([]vertex, len(nvs)),
-				visited:         make(map[string]bool, len(curPath.visited)),
+				vertices:        make([]*vertex, len(nvs)),
+				visited:         make(map[*vertex]bool, len(curPath.visited)),
 				maxSmallVisited: curPath.maxSmallVisited,
 			}
 
@@ -148,12 +148,11 @@ func findAllPaths(g *grid, start, end string, allowedVisits int) []path {
 				newPath.visited[k] = v
 			}
 
-
 			if v.small {
-				if newPath.visited[v.value] {
+				if newPath.visited[v] {
 					newPath.maxSmallVisited++
 				}
-				newPath.visited[v.value] = true
+				newPath.visited[v] = true
 			}
 
 			log.Debugf("created new path: %s", newPath)
