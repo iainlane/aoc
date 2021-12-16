@@ -10,30 +10,39 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func step(s string, rules map[string]string, quantities map[rune]int) string {
-	// slide over s, looking for a match in rules
-	type insertion struct {
-		index int
-		value string
-	}
-	var insertions []insertion
+func makePairsMap(s string) map[string]int {
+	pairs := make(map[string]int)
 	for i := 0; i < len(s)-1; i++ {
-		window := s[i : i+2]
-		if replacement, ok := rules[window]; ok {
-			log.Debugf("Insert %s at %d", replacement, i+1)
-			insertions = append(insertions, insertion{i + 1 + len(insertions), replacement})
-			quantities[rune(replacement[0])]++
-		}
+		pairs[s[i:i+2]] += 1
 	}
-
-	for _, insertion := range insertions {
-		s = s[:insertion.index] + insertion.value + s[insertion.index:]
-	}
-
-	return s
+	return pairs
 }
 
-func findMaxMin(quantities map[rune]int) (int, int) {
+func step(pairsMap map[string]int, rules map[string]string, quantities map[byte]int) {
+	updateMap := make(map[string]int)
+	for k, v := range rules {
+		if pv, ok := pairsMap[k]; ok {
+			log.Debugf("%s -> %s. Setting %s to 0, setting %s to %d, setting %s to %d",
+				k, v, k, string(k[0])+v, updateMap[string(k[0])+v]+pv, string(k[1])+v, updateMap[string(k[1])+v]+pv)
+			if _, ok := updateMap[k]; !ok {
+				updateMap[k] = 0
+			}
+			updateMap[string(k[0])+v] += pv
+			updateMap[v+string(k[1])] += pv
+			quantities[v[0]] += pv
+		}
+	}
+	// Could this be done without the intermediate map?
+	for k, v := range updateMap {
+		if v == 0 {
+			delete(pairsMap, k)
+		} else {
+			pairsMap[k] = v
+		}
+	}
+}
+
+func findMaxMin(quantities map[byte]int) (int, int) {
 	var max, min int
 	// find maximum, minimum in quantities
 	for _, v := range quantities {
@@ -45,6 +54,24 @@ func findMaxMin(quantities map[rune]int) (int, int) {
 		}
 	}
 	return max, min
+}
+
+func iterate(times int, rules map[string]string, pairsMap map[string]int, quantities map[byte]int) (int, int) {
+	for i := 0; i < times; i++ {
+		step(pairsMap, rules, quantities)
+	}
+
+	max, min := findMaxMin(quantities)
+
+	return max, min
+}
+
+func countCharacters(s string) map[byte]int {
+	quantities := make(map[byte]int)
+	for _, b := range []byte(s) {
+		quantities[b]++
+	}
+	return quantities
 }
 
 func main() {
@@ -59,42 +86,28 @@ func main() {
 	scanner := bufio.NewScanner(reader)
 
 	insertionrules := make(map[string]string)
-	quantities := make(map[rune]int)
 
 	scanner.Scan()
 	startString := scanner.Text()
-	// populate quantities with the count of each character in startString
-	for _, r := range startString {
-		quantities[r]++
-	}
-	// Skip a blank line
 	scanner.Scan()
 
 	for scanner.Scan() {
 		// NN -> C
 		parts := strings.SplitN(scanner.Text(), " -> ", 2)
 
-		log.Debugf("%s -> %s", parts[0], parts[1])
 		insertionrules[parts[0]] = parts[1]
 	}
 
-	stepsPartOne := 10
-	for i := 0; i < stepsPartOne; i++ {
-		log.Infof("Iteration %d", i)
-		startString = step(startString, insertionrules, quantities)
-		log.Debugln(startString)
-	}
+	// Set up initial state
+	quantities := countCharacters(startString)
+	pairsMap := makePairsMap(startString)
 
-	max, min := findMaxMin(quantities)
+	stepsPartOne := 10
+
+	max, min := iterate(stepsPartOne, insertionrules, pairsMap, quantities)
 	fmt.Printf("Part 1: Max: %d, Min: %d. Max - min: %d\n", max, min, max-min)
 
 	stepsPartTwo := 40
-	for i := 0; i < stepsPartTwo-stepsPartOne; i++ {
-		log.Infof("Iteration %d", i+stepsPartOne)
-		startString = step(startString, insertionrules, quantities)
-		log.Debugln(startString)
-	}
-
-	max, min = findMaxMin(quantities)
+	max, min = iterate(stepsPartTwo-stepsPartOne, insertionrules, pairsMap, quantities)
 	fmt.Printf("Part 2: Max: %d, Min: %d. Max - min: %d\n", max, min, max-min)
 }
